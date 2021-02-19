@@ -1,3 +1,13 @@
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("service-worker.js")
+      .then(reg => {
+        console.log("We found your service worker file!", reg);
+        
+      });
+  });
+}
+
 const FILES_TO_CACHE = [
   "/",
   "/db.js",
@@ -16,12 +26,12 @@ const DATA_CACHE_NAME = "data-cache-v1";
 // install
 self.addEventListener("install", (event) => {
   // pre cache image data
-  evt.waitUntil(
+  event.waitUntil(
     caches.open(DATA_CACHE_NAME).then((cache) => cache.add("/api/images"))
   );
     
   // pre cache all static assets
-  evt.waitUntil(
+  event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(FILES_TO_CACHE))
   );
 
@@ -31,8 +41,8 @@ self.addEventListener("install", (event) => {
 });
 
 // activate
-self.addEventListener("activate", function(evt) {
-  evt.waitUntil(
+self.addEventListener("install", function(event) {
+  event.waitUntil(
     caches.keys().then(keyList => {
       return Promise.all(
         keyList.map(key => {
@@ -47,10 +57,10 @@ self.addEventListener("activate", function(evt) {
 
   self.clients.claim();
 });
-
+ 
 // fetch
-self.addEventListener("fetch", function(evt) {
-  if (event.request.url.includes("/api/")) {
+self.addEventListener("fetch", function(event) {
+  if (event.request.url.includes("/..models/..transaction")) {
     event.respondWith(
       caches.open(DATA_CACHE_NAME).then(cache => {
         return fetch(event.request)
@@ -72,7 +82,7 @@ self.addEventListener("fetch", function(evt) {
     return;
   }
 
-  evt.respondWith(
+  event.respondWith(
     caches.open(CACHE_NAME).then(cache => {
       return cache.match(event.request).then(response => {
         return response || fetch(event.request);
